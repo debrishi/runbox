@@ -242,10 +242,10 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen font-sans ${theme === 'dark' ? 'bg-[#1e1e1e] text-gray-200' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`h-screen flex flex-col font-sans ${theme === 'dark' ? 'bg-[#1e1e1e] text-gray-200' : 'bg-gray-50 text-gray-900'}`}>
 
       {/* --- Header --- */}
-      <header className={`h-14 border-b flex items-center justify-between px-4 sticky top-0 z-20 ${theme === 'dark' ? 'bg-[#262626] border-[#333]' : 'bg-white border-gray-200'}`}>
+      <header className={`h-14 shrink-0 border-b flex items-center justify-between px-4 z-20 ${theme === 'dark' ? 'bg-[#262626] border-[#333]' : 'bg-white border-gray-200'}`}>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <button
@@ -333,7 +333,7 @@ export default function App() {
       </header>
 
       {/* --- Main Content --- */}
-      <main className="flex flex-col md:flex-row h-[calc(100vh-56px)] overflow-hidden">
+      <main className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
 
         {/* Left Panel: Editor */}
         <section
