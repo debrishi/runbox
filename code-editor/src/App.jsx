@@ -139,7 +139,7 @@ export default function App() {
     if (!LAMBDA_URL) {
       setOutput({
         status: 'Configuration Error',
-        runtime: 0,
+        runtime: null,
         stdout: '',
         error: 'VITE_LAMBDA_URL is not set. Add it to .env.local and restart the dev server.',
       });
@@ -423,7 +423,7 @@ export default function App() {
                 })()}
 
                 {/* Runtime Info */}
-                {output.runtime > 0 && (
+                {output.runtime != null && (
                   <div className="flex items-center space-x-2 text-xs text-gray-500">
                     <Clock size={12} />
                     <span>Finished in {output.runtime} ms</span>
