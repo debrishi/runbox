@@ -64,6 +64,15 @@ console.log(\`Hello \${name}!\`);
 for (let i = 1; i <= 5; i++) console.log(\`Count: \${i}\`);`,
 };
 
+// File extensions used by the Save button. Java compiler requires the
+// filename to match the public class, hence Main.java rather than code.java.
+const FILENAME = {
+  cpp: 'code.cpp',
+  java: 'Main.java',
+  python: 'code.py',
+  typescript: 'code.ts',
+};
+
 // Resolve the deployed Lambda URL at build time. Empty string -> mock mode.
 const LAMBDA_URL = import.meta.env.VITE_LAMBDA_URL || '';
 
@@ -197,6 +206,20 @@ export default function App() {
     setCodeByLang((prev) => ({ ...prev, [language.api]: value ?? '' }));
   };
 
+  // Save button: trigger a browser download of the current editor contents
+  // using the language-appropriate filename.
+  const handleSaveCode = () => {
+    const blob = new Blob([code ?? ''], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = FILENAME[language.api] ?? 'code.txt';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className={`min-h-screen font-sans ${theme === 'dark' ? 'bg-[#1e1e1e] text-gray-200' : 'bg-gray-50 text-gray-900'}`}>
 
@@ -263,8 +286,9 @@ export default function App() {
 
         <div className="flex items-center space-x-2">
           <button
+            onClick={handleSaveCode}
             className={`p-2.5 rounded transition-all duration-300 hover:scale-105 active:scale-95 ${theme === 'dark' ? 'bg-[#333] text-gray-400 hover:bg-[#404040]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            title="Save"
+            title={`Save as ${FILENAME[language.api]}`}
           >
             <Save size={18} />
           </button>
