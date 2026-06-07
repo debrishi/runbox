@@ -10,7 +10,6 @@ import {
   Terminal,
   AlertCircle,
   AlertTriangle,
-  Clock,
   CheckCircle2
 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
@@ -431,21 +430,12 @@ export default function App() {
                     <div className={`flex items-center space-x-2 ${tone}`}>
                       <Icon size={16} />
                       <span className="font-semibold">{output.status}</span>
+                      {output.runMs != null && (
+                        <span className="text-xs font-normal text-gray-500 tabular-nums">in {output.runMs} ms</span>
+                      )}
                     </div>
                   );
                 })()}
-
-                {/* Runtime Info */}
-                {output.runtime != null && (
-                  <div className="flex items-center space-x-2 text-xs text-gray-500">
-                    <Clock size={12} />
-                    <span className="tabular-nums">
-                      {output.runMs != null && <>Run {output.runMs} ms · </>}
-                      {output.compileMs != null && <>Compile {output.compileMs} ms · </>}
-                      Total {output.runtime} ms
-                    </span>
-                  </div>
-                )}
 
                 {/* Stdout (when present) */}
                 {output.stdout && (
