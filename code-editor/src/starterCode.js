@@ -11,15 +11,9 @@ int main() {
     cout << "Hello " << name << "!" << endl;
     return 0;
 }`,
-  java: `import java.util.*;
-import java.io.*;
-
-public class Main {
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        String name = sc.next();
-        System.out.println("Hello " + name + "!");
-    }
+  java: `void main() {
+    String name = IO.readln();
+    IO.println("Hello " + name + "!");
 }`,
   python: `name = input()
 print(f"Hello {name}!")`,
