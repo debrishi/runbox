@@ -48,11 +48,9 @@ const REQUEST_TIMEOUT_MS = 30_000;
 
 // Map Lambda error codes to a UI-friendly status label.
 const ERROR_LABEL = {
-  COMPILATION_ERROR: 'Compilation Error',
-  COMPILE_TIME_LIMIT_EXCEEDED: 'Compile Time Limit Exceeded',
-  RUNTIME_ERROR: 'Runtime Error',
-  TIME_LIMIT_EXCEEDED: 'Time Limit Exceeded',
-  MEMORY_LIMIT_EXCEEDED: 'Memory Limit Exceeded',
+  ERROR_TLE: 'Time Limit Exceeded',
+  ERROR_MLE: 'Memory Limit Exceeded',
+  ERROR: 'Error',
 };
 
 // Status -> visual severity. "Output Limit Exceeded" is a successful run that

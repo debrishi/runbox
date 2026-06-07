@@ -23,7 +23,7 @@ echo; echo "=== Network isolation (should timeout per README) ==="
 # No NAT gateway on real Lambda -> outbound hangs till 10s timeout.
 # Docker container HAS network, so this test only verifies behaviour when
 # the code itself can't reach a host within 10s.
-t "python: DNS resolve junk host" "TIME_LIMIT_EXCEEDED" \
+t "python: DNS resolve junk host" "ERROR_TLE" \
     '{"language":"python","code":"import socket; socket.create_connection((\"10.255.255.1\", 80), timeout=30)"}'
 
 echo; echo "=== Fork bomb / RLIMIT_NPROC ==="
@@ -65,7 +65,9 @@ t "python: ~2s work completes" "done-fast" \
     '{"language":"python","code":"s=0\nfor i in range(5_000_000): s+=i\nprint(\"done-fast\")"}'
 
 echo; echo "=== Java specifics ==="
-t "java: missing public class -> rejected" "public class" \
+t "java: compact source / instance main (JEP 512) runs" "compact-ok" \
+    '{"language":"java","code":"void main(){ System.out.println(\"compact-ok\"); }"}'
+t "java: non-public class now runs (no checker)" "nope" \
     '{"language":"java","code":"class Wrong { public static void main(String[] a){ System.out.println(\"nope\"); } }"}'
 t "java: public class Foo (LeetCode model) works" "hello-from-foo" \
     '{"language":"java","code":"public class Foo { public static void main(String[] a){ System.out.println(\"hello-from-foo\"); } }"}'
@@ -106,20 +108,20 @@ t "java: truncation marker" "OUTPUT_TRUNCATED" \
 t "ts: truncation marker" "OUTPUT_TRUNCATED" \
     '{"language":"typescript","code":"process.stdout.write(\"x\".repeat(5000));"}'
 
-echo; echo "=== RUNTIME_ERROR field (all languages) ==="
-t "py: RUNTIME_ERROR code" "RUNTIME_ERROR" \
+echo; echo "=== ERROR field (all languages) ==="
+t "py: ERROR code" "ERROR" \
     '{"language":"python","code":"raise ValueError(\"boom\")"}'
-t "cpp: RUNTIME_ERROR code" "RUNTIME_ERROR" \
+t "cpp: ERROR code" "ERROR" \
     '{"language":"cpp","code":"int main(){ return 1; }"}'
-t "java: RUNTIME_ERROR code" "RUNTIME_ERROR" \
+t "java: ERROR code" "ERROR" \
     '{"language":"java","code":"public class Main{public static void main(String[] a){throw new RuntimeException(\"boom\");}}"}'
-t "ts: RUNTIME_ERROR code" "RUNTIME_ERROR" \
+t "ts: ERROR code" "ERROR" \
     '{"language":"typescript","code":"throw new Error(\"boom\");"}'
 
 echo; echo "=== Process group kill on timeout (no orphan children) ==="
 # Grandchild sleeps 30s then tries to write. If the process group is killed,
 # the file never appears — so a follow-up invocation reports it missing.
-t "orphan kill: parent times out" "TIME_LIMIT_EXCEEDED\|RUNTIME_ERROR" \
+t "orphan kill: parent times out" "ERROR_TLE\|ERROR" \
     '{"language":"python","code":"import os,time\nif os.fork()==0:\n  time.sleep(30)\n  open(\"/tmp/leaked\",\"w\").write(\"!\")\nelse:\n  time.sleep(30)"}'
 sleep 4  # give the would-be orphan time to run if it wasn't killed
 t "orphan kill: grandchild did not write" "NotFound" \
@@ -127,15 +129,14 @@ t "orphan kill: grandchild did not write" "NotFound" \
 
 echo; echo "=== Disk quota (RLIMIT_FSIZE) ==="
 # 20 MB streaming write > 10 MB RLIMIT_FSIZE -> SIGXFSZ, non-zero exit.
-t "disk: file size cap trips" "RUNTIME_ERROR" \
+t "disk: file size cap trips" "ERROR" \
     '{"language":"python","code":"f=open(\"/tmp/bigfile\",\"wb\")\nchunk=b\"x\"*(1024*1024)\nfor _ in range(20): f.write(chunk)\nprint(\"done\")"}'
 
-echo; echo "=== COMPILE_TIME_LIMIT_EXCEEDED ==="
-# Not exercised by a live test: reliably stalling g++ past 10s via user source
-# without using compiler extensions is impractical. The code path exists in
-# lambda.py ('if to: return COMPILE_TIME_LIMIT_EXCEEDED' after the compile _run)
-# and is kept as defensive coverage for pathological input.
-echo "⏭️  skipped (see comment)"
+echo; echo "=== combined compile+run timeout ==="
+# There is no separate compile phase anymore: compile + execution share one
+# subprocess bounded by MAX_RUN_TIMEOUT (MAX_COMP_TIMEOUT + MAX_EXEC_TIMEOUT).
+# A slow compile or a long-running program both surface as ERROR_TLE.
+echo "⏭️  skipped (reliably stalling clang past the budget via user source is impractical)"
 
 echo; echo "=== Summary ==="
 echo "Passed: $PASS, Failed: $FAIL"

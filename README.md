@@ -32,7 +32,7 @@ Each layer covers the failure mode of the one inside it.
 
 | Limit | Mechanism | Notes |
 | :--- | :--- | :--- |
-| **Memory — 256MB** | `resource.setrlimit(RLIMIT_AS)` | Kills subprocess on breach. Returns `MEMORY_LIMIT_EXCEEDED`. `RLIMIT_AS` caps virtual address space, not RSS — test with realistic workloads as shared library mappings count toward the limit. |
+| **Memory — 256MB** | Python `resource.setrlimit(RLIMIT_AS)`; Java `-Xmx`; Node `--max-old-space-size`; C++ ASan `hard_rss_limit_mb` | Each runtime caps itself at 256MB and surfaces `MEMORY_LIMIT_EXCEEDED` (`MemoryError` / `OutOfMemoryError` / heap-OOM). `RLIMIT_AS` caps virtual address space, not RSS — test with realistic workloads as shared library mappings count toward the limit. **C++ is the exception:** ASan reserves ~8GB of virtual space, so a virtual cap (`RLIMIT_AS`) can't be applied (`cap_memory=False`). Instead ASan's own *RSS-based* limiter (`ASAN_OPTIONS=hard_rss_limit_mb=256`) caps resident memory at 256MB and aborts with `hard rss limit exhausted` on breach. Because a monitor thread polls RSS, the kill can overshoot slightly; the cgroup OOM-killer `SIGKILL` (returncode `-9`, not from a timeout) remains the backstop for allocation bursts faster than the poll interval — both map to `MEMORY_LIMIT_EXCEEDED`. |
 | **Output — 4KB** | `stdout`/`stderr` written to `/tmp`, first 4096 bytes read back | Prevents `while True: print()` memory exhaustion. |
 | **Network — none** | VPC with no NAT gateway | All outbound connections time out at 10s subprocess limit. |
 | **Concurrency — 10–20** | Lambda Reserved Concurrency | Hard cap on simultaneous executions — primary abuse cost control. |
