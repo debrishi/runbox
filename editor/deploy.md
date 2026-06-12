@@ -3,7 +3,7 @@
 Vite SPA, deployed to Cloudflare Pages via direct upload.
 
 ```bash
-cd code-editor
+cd editor
 export PROJECT=code-playground
 export LAMBDA_URL=$(aws lambda get-function-url-config --region ap-south-1 \
   --function-name code-lambda --query FunctionUrl --output text)
