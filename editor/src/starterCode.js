@@ -11,9 +11,11 @@ int main() {
     cout << "Hello " << name << "!" << endl;
     return 0;
 }`,
-  java: `void main() {
-    String name = IO.readln();
-    IO.println("Hello " + name + "!");
+  java: `class Main {
+    public static void main(String[] args) {
+        String name= IO.readln();
+        IO.println("Hello " + name + "!");
+    }
 }`,
   python: `name = input()
 print(f"Hello {name}!")`,
