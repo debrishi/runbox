@@ -16,7 +16,7 @@ import tempfile
 import time
 
 MAX_TIME_SEC = 10                   # combined compile + run budget
-MAX_MEMORY_MB = 256                 # per-language cap: ulimit -v / -Xmx / --max-old-space-size / ASan rss
+MAX_MEMORY_MB = 512                 # per-language cap: ulimit -v / -Xmx / --max-old-space-size / ASan rss
 MAX_FILE_SIZE_MB = 10               # RLIMIT_FSIZE — stops /tmp fill attacks
 MAX_NPROC = 50                      # RLIMIT_NPROC
 MAX_OUTPUT_SIZE = 4096              # bytes of stdout/stderr returned to the caller

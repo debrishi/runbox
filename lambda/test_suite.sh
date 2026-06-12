@@ -20,7 +20,7 @@ t python success  '{"language":"python","code":"print(\"hi\")"}' '"statusCode": 
 t python runtime  '{"language":"python","code":"raise ValueError(\"boom\")"}' 'ERROR'
 t python compile  '{"language":"python","code":"1 +"}' 'ERROR'
 t python tle      '{"language":"python","code":"while True: pass"}' 'ERROR_TLE'
-t python mle      '{"language":"python","code":"x=\"a\"*(400*1024*1024)"}' 'ERROR_MLE'
+t python mle      '{"language":"python","code":"x=\"a\"*(1000*1024*1024)"}' 'ERROR_MLE'
 t python trunc    '{"language":"python","code":"print(\"x\"*5000)"}' 'OUTPUT_TRUNCATED'
 t python stdin    '{"language":"python","code":"print(f\"Hi {input()}\")","stdin":"Deb"}' 'Hi Deb'
 

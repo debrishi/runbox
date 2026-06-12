@@ -16,7 +16,7 @@ export default function CodeEditor({ language, code, onChange, theme }) {
       options={{
         automaticLayout: true,
         minimap: { enabled: false },
-        fontSize: 14,
+        fontSize: 15,
         fontFamily: "'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
         fontLigatures: true,
         lineNumbers: 'on',
