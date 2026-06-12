@@ -3,7 +3,7 @@
 Containerised Python Lambda exposed via a public Function URL.
 
 ```bash
-cd code-lambda
+cd lambda
 export AWS_REGION=ap-south-1
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 export ECR=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/code-lambda

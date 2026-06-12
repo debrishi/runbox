@@ -22,6 +22,11 @@ MAX_NPROC = 50                      # RLIMIT_NPROC
 MAX_OUTPUT_SIZE = 4096              # bytes of stdout/stderr returned to the caller
 TRUNCATED_MSG = f"\n[OUTPUT_TRUNCATED: Exceeded {MAX_OUTPUT_SIZE}B Limit]"
 
+# AOT cache built during `docker build` — pre-links all classes used by
+# source-launch mode (internal javac + JDK core) so the JVM skips parsing,
+# verification, and linking on every invocation.  See Dockerfile.
+JAVA_AOT_CACHE = "/opt/java-aot/source-launch.aot"
+
 # Substrings we look for in stderr to surface a clean ERROR_MLE.
 OOM_SIGNATURES = (
     "MemoryError",                      # Python
@@ -60,8 +65,21 @@ LANG_CONFIG = {
     "java": {
         # `java Main.java` source-launch: compiles in-memory, allows any public
         # class name + Java 25 compact source; compile errors exit non-zero.
+        #
+        # Startup optimisations (shave ~2s off cold source-launch):
+        #   -XX:AOTCache          loads the pre-built cache from docker build
+        #                         (pre-linked javac compiler + JDK core classes).
+        #   -XX:TieredStopAtLevel=1  C1-only — skip C2 profiling/compilation;
+        #                         user code never runs long enough to benefit.
+        #   -XX:+UseSerialGC      single-threaded GC; no thread-pool overhead
+        #                         for a sub-10s process with a small heap.
         "source": "Main.java",
-        "run": ["java", f"-Xmx{MAX_MEMORY_MB}m", "Main.java"],
+        "run": ["java",
+                f"-XX:AOTCache={JAVA_AOT_CACHE}",
+                "-XX:TieredStopAtLevel=1",
+                "-XX:+UseSerialGC",
+                f"-Xmx{MAX_MEMORY_MB}m",
+                "Main.java"],
     },
 }
 

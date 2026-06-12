@@ -15,6 +15,24 @@ RUN dnf update -y && \
     dnf install -y nodejs && \
     dnf clean all
 
+# ---------- Java AOT Cache (JEP 514 / 515 — Corretto 25) -------------------
+# Source-launch mode (`java Main.java`) loads the internal javac compiler on
+# every invocation — ~200 classes that take 1-2s to parse + verify + link.
+#
+# A training run during `docker build` captures all of those classes (plus the
+# JDK core) into an AOT cache. At runtime the JVM memory-maps the pre-linked
+# metadata and, with JEP 515, also loads pre-recorded method profiles so C1
+# can emit optimized code immediately instead of starting from the interpreter.
+#
+# Net effect: Java source-launch cold-start drops from ~3-4s to ~1-1.5s.
+RUN mkdir -p /opt/java-aot && \
+    echo 'class Warmup { public static void main(String[] args) { System.out.println("ok"); } }' \
+        > /tmp/Warmup.java && \
+    java -XX:AOTCacheOutput=/opt/java-aot/source-launch.aot \
+         -XX:TieredStopAtLevel=1 -XX:+UseSerialGC \
+         /tmp/Warmup.java && \
+    rm /tmp/Warmup.java
+
 COPY lambda.py ${LAMBDA_TASK_ROOT}/app.py
 
 CMD ["app.lambda_handler"]
