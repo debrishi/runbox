@@ -11,7 +11,7 @@ int main() {
     cout << "Hello " << name << "!" << endl;
     return 0;
 }`,
-  java: `class Main {
+  java: `public class Main {
     public static void main(String[] args) {
         String name= IO.readln();
         IO.println("Hello " + name + "!");
