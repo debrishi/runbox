@@ -84,7 +84,7 @@ t "ts: runtime error" "ReferenceError\\|is not defined" \
 
 echo; echo "=== C++ specifics ==="
 t "cpp: segfault -> non-zero rc" "statusCode\": 400" \
-    '{"language":"cpp","code":"int main(){ int* p=nullptr; *p=1; return 0; }"}'
+    '{"language":"cpp","code":"int main(){ volatile int* p=nullptr; *p=1; return 0; }"}'
 t "cpp: exit code 7 surfaces as failure" "statusCode\": 400" \
     '{"language":"cpp","code":"int main(){ return 7; }"}'
 t "cpp: ASan catches use-after-free" "heap-use-after-free" \

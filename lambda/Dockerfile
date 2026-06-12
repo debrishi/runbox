@@ -15,6 +15,23 @@ RUN dnf update -y && \
     dnf install -y nodejs && \
     dnf clean all
 
+# ---------- C++ Precompiled Header (PCH) ------------------------------------
+# `#include <bits/stdc++.h>` pulls in the entire C++ standard library — thousands
+# of lines of template-heavy headers that take ~1-2s to parse on every compile.
+#
+# Pre-compiling this header during `docker build` serialises the parsed AST into
+# a .pch file.  At runtime, clang loads the pre-parsed AST instead of re-parsing
+# from scratch.
+#
+# The PCH MUST be built with the exact same flags used at compile time; a flag
+# mismatch causes clang to silently ignore the PCH or error out.
+RUN mkdir -p /opt/cpp-pch && \
+    echo '#include <bits/stdc++.h>' > /opt/cpp-pch/stdc++.h && \
+    clang++ -std=c++20 -O2 -fno-finite-loops -fsanitize=address \
+            -fno-omit-frame-pointer -g \
+            -x c++-header /opt/cpp-pch/stdc++.h \
+            -o /opt/cpp-pch/stdc++.h.pch
+
 # ---------- Java AOT Cache (JEP 514 / 515 — Corretto 25) -------------------
 # Source-launch mode (`java Main.java`) loads the internal javac compiler on
 # every invocation — ~200 classes that take 1-2s to parse + verify + link.

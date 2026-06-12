@@ -12,9 +12,6 @@ t() {
     if echo "$r" | grep -q "$4"; then echo "  ✅ PASS"; else echo "  ❌ FAIL — $r"; fi
 }
 
-echo "=== WARMUP ==="
-t warm is_warmup '{"is_warmup":true}' 'warm'
-
 echo; echo "=== PYTHON ==="
 t python success  '{"language":"python","code":"print(\"hi\")"}' '"statusCode": 200'
 t python runtime  '{"language":"python","code":"raise ValueError(\"boom\")"}' 'ERROR'

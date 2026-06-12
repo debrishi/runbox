@@ -39,12 +39,12 @@ docker stop code-lambda-test
 # Push to ECR
 aws ecr get-login-password --region $AWS_REGION \
   | docker login --username AWS --password-stdin $ECR
-docker tag code-lambda:latest $ECR:latest
-docker push $ECR:latest
+docker tag code-lambda:latest ${ECR}:latest
+docker push ${ECR}:latest
 
 # Create function
 aws lambda create-function --region $AWS_REGION --function-name code-lambda \
-  --package-type Image --code ImageUri=$ECR:latest \
+  --package-type Image --code ImageUri=${ECR}:latest \
   --role arn:aws:iam::$AWS_ACCOUNT_ID:role/code-lambda-exec-role \
   --architectures arm64 --memory-size 1024 --timeout 20
 
@@ -79,10 +79,10 @@ docker buildx build --platform linux/arm64 --provenance=false --output=type=dock
 docker run --rm -d -p 9000:8080 --memory=1024m --name code-lambda-test code-lambda
 ./test_suite.sh && ./test_stdin.sh && ./test_stress.sh
 docker stop code-lambda-test
-docker tag code-lambda:latest $ECR:latest
-docker push $ECR:latest
+docker tag code-lambda:latest ${ECR}:latest
+docker push ${ECR}:latest
 aws lambda update-function-code --region $AWS_REGION --function-name code-lambda \
-  --image-uri $ECR:latest
+  --image-uri ${ECR}:latest
 ```
 
 ## Notes

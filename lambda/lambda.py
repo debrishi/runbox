@@ -22,6 +22,11 @@ MAX_NPROC = 50                      # RLIMIT_NPROC
 MAX_OUTPUT_SIZE = 4096              # bytes of stdout/stderr returned to the caller
 TRUNCATED_MSG = f"\n[OUTPUT_TRUNCATED: Exceeded {MAX_OUTPUT_SIZE}B Limit]"
 
+# Precompiled header built during `docker build` — serialises the parsed AST
+# of <bits/stdc++.h> (the entire STL) so clang skips re-parsing ~30k lines of
+# template-heavy headers on every compilation.  See Dockerfile.
+CPP_PCH = "/opt/cpp-pch/stdc++.h.pch"
+
 # AOT cache built during `docker build` — pre-links all classes used by
 # source-launch mode (internal javac + JDK core) so the JVM skips parsing,
 # verification, and linking on every invocation.  See Dockerfile.
@@ -51,11 +56,15 @@ LANG_CONFIG = {
         # Compile && run in one shell; exec so timeout targets the binary.
         # -fno-finite-loops keeps `while(1){}` (clang -O2 would delete it).
         # ASan needs ~8GB virtual, so memory is capped via its RSS limiter.
+        # -include-pch loads the pre-parsed <bits/stdc++.h> AST built during
+        # docker build — skips re-parsing ~30k lines of STL on every compile.
+        # User code that #includes headers already in the PCH is deduplicated.
         "run": ["sh", "-c",
                 "export ASAN_OPTIONS=abort_on_error=1:halt_on_error=1:"
                 f"detect_leaks=0:hard_rss_limit_mb={MAX_MEMORY_MB}; "
-                "clang++ -std=c++17 -O2 -fno-finite-loops -fsanitize=address "
-                "-fno-omit-frame-pointer -g -o main main.cpp && exec ./main"],
+                "clang++ -std=c++20 -O2 -fno-finite-loops -fsanitize=address "
+                f"-fno-omit-frame-pointer -g -include-pch {CPP_PCH} "
+                "-o main main.cpp && exec ./main"],
     },
     "typescript": {
         "source": "main.ts",
@@ -157,10 +166,6 @@ def lambda_handler(event, context):
             event = json.loads(event["body"])
         except json.JSONDecodeError:
             return _response(400, {"error": "Invalid JSON"})
-
-    # EventBridge warmup ping.
-    if event.get("is_warmup"):
-        return _response(200, {"warm": True})
 
     code = event.get("code")
     lang = event.get("language", "python")
