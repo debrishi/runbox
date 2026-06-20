@@ -22,7 +22,6 @@ Resources:
     Properties:
       FunctionName: runbox-lambda
       PackageType: Image
-      ReservedConcurrentExecutions: 10
       FunctionUrlConfig:
         AuthType: NONE
         Cors:
