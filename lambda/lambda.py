@@ -45,6 +45,35 @@ OOM_SIGNATURES = (
 # Each entry is {source, run}: write code to `source`, run one subprocess.
 # No separate compile phase (C++ compiles inline); each `run` self-caps memory
 # (Python ulimit -v, C++ ASan rss, Node --max-old-space-size, Java -Xmx).
+# ---------------------------------------------------------------------------
+# INIT-phase toolchain warming: page in clang++ and JVM binaries while we have
+# burst CPU (up to 6 vCPUs for 10s).  Subsequent invocations skip the costly
+# page-fault IO because everything is already in the page cache.
+# ---------------------------------------------------------------------------
+def _warm_toolchains():
+    try:
+        subprocess.run(
+            ["clang++", "-std=c++20", "-O2", "-fsanitize=address",
+             "-fno-omit-frame-pointer", f"-include-pch", CPP_PCH,
+             "-x", "c++", "-", "-fsyntax-only"],
+            input="int main(){}", text=True,
+            timeout=MAX_TIME_SEC, capture_output=True,
+        )
+    except Exception:
+        pass
+    try:
+        subprocess.run(
+            ["java", f"-XX:AOTCache={JAVA_AOT_CACHE}",
+             "-XX:TieredStopAtLevel=1", "-XX:+UseSerialGC",
+             "-version"],
+            timeout=MAX_TIME_SEC, capture_output=True,
+        )
+    except Exception:
+        pass
+
+_warm_toolchains()
+
+
 LANG_CONFIG = {
     "python": {
         "source": "main.py",
