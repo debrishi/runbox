@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Runbox Python backend — container-image Lambda with Function URL.
+
+Globals:
+  Function:
+    Timeout: 20
+    MemorySize: 1769
+    Architectures:
+      - arm64
+
+Resources:
+  # CloudWatch log group with 30-day retention.
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/runbox-lambda
+      RetentionInDays: 30
+
+  RunboxLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: runbox-lambda
+      PackageType: Image
+      ReservedConcurrentExecutions: 10
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - '*'
+          AllowMethods:
+            - POST
+          AllowHeaders:
+            - content-type
+          MaxAge: 86400
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
+
+Outputs:
+  FunctionUrl:
+    Description: Public Function URL — use as VITE_LAMBDA_URL for the editor.
+    Value: !GetAtt RunboxLambdaUrl.FunctionUrl
+
+  FunctionArn:
+    Description: Lambda ARN.
+    Value: !GetAtt RunboxLambda.Arn

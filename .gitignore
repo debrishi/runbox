@@ -20,3 +20,6 @@ venv/
 
 # Docker build artifacts
 *.tar
+
+# AWS SAM CLI
+.aws-sam/
